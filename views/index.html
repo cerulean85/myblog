@@ -16,7 +16,31 @@
     <ul>
         <li v-for="(item, index) in my_items">{{ index + ' : ' + item.name }}</li>
     </ul>
+
+    <b v-if="isMan" @click="switchGender">man!</b>
+    <b v-else>Woman!!</b>
+
+    <b v-if="gender==0" @click="switchGender">man!</b>
+    <b v-else-if="gender==1" @click="switchGender">Woman!!</b>
+    <b v-else>Nne</b>
+
+    <b v-if="gender == 0 && age > 60" @click="switchGender">GrandMother!</b>
+    <b v-else-if="gender==1 && age > 60" @click="switchGender">GrandFather!!</b>
+    <b v-else>Nne</b>
+
+    <button v-on:click="reverseMessage">메시지 뒤집기</button>
+    <input v-model="message">
+
+    <ul>
+        <todo-item
+          v-for="item in groceryList"
+          v-bind:todo="item"
+          v-bind:key="item.id"
+        ></todo-item>
+    </ul>
 </div>
+
+
 
 
 

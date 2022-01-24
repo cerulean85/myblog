@@ -6,6 +6,7 @@ const bodyParser = require("body-parser")
 const config = require("./config")
 const router = require("./routes/router")
 const logger = require("morgan")
+const axios = require('axios');
 
 app.use(cors())
 app.use(bodyParser.urlencoded({ extended: true }))

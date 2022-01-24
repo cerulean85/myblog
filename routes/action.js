@@ -1,5 +1,6 @@
 const config = require("../config")
 const query = require("../modules/query")
+const util = require("../modules/util")
 
 module.exports = {
 
@@ -19,6 +20,41 @@ module.exports = {
         }
     },
 
+    get_articles: function(req, res) {
+        query.query_select({
+            "name": "insert_article",
+            "sql": `SELECT * FROM article WHERE deleted = 0`,
+            "emit": function (result) {
+                let articles = []
+                for (const article of result) {
+
+                    const createdAtDTForm = util.stringToDatetime(article.created_at)
+                    const updatedAtDTForm = util.stringToDatetime(article.updated_at)
+                    articles.push({
+                        "no": article.no,
+                        "user_no": article.user_no,
+                        "content_type": article.content_type,
+                        "title": article.title,
+                        "contents": article.contents,
+                        "create_at": article.created_at,
+                        "update_at": article.updated_at,
+                        "files": article.files,
+                        "view_count": article.view_count
+                    })
+                }
+                res.send({
+                    err: undefined,
+                    totalCount: articles.length,
+                    list: articles
+                })
+                console.log(articles)
+            },
+            "call_res": res,
+            "reverse": false,
+            "res_send": true,
+        });
+    },
+
     insert_article: function(req, res) {
         const userNo      = req.body.user_no
         const title       = req.body.title
@@ -27,8 +63,8 @@ module.exports = {
         const contentType = req.body.content_type
         query.query_insert({
             "name": "insert_article",
-            "sql": `INSERT INTO article(user_no, content_type, title, contents, files, created_at) 
-                                 VALUES(${userNo}, ${contentType}, '${title}', '${contents}', '${files}', NOW())`,
+            "sql": `INSERT INTO article(user_no, content_type, title, contents, files, created_at, updated_at) 
+                                 VALUES(${userNo}, ${contentType}, '${title}', '${contents}', '${files}', NOW(), NOW())`,
             "emit": function (result) {
                 console.log(`RESULT: ${result}`)
             },

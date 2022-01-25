@@ -7,6 +7,7 @@ module.exports = {
             user: "root",
             pass: "12345678"
         }
-    }
+    },
+    pageItemCount: 10
 }
 

@@ -70,6 +70,17 @@ function query(sql, addr, action) {
 
 module.exports = {
 
+    query_filter: function(searchType, searchKeyword) {
+        let filter = ''
+        if (searchType === "title")
+            filter = ` AND ART.title LIKE CONCAT('%${searchKeyword}%') `
+        else if (searchType === "contents")
+            filter = ` AND ART.contents LIKE CONCAT('%${searchKeyword}%') `
+        else if (searchType === "nickname")
+            filter = ` AND U.nickname LIKE CONCAT('%${searchKeyword}%') `
+        return filter
+    },
+
     query_select: function (obj) {
         query(obj.sql, obj.addr, function (err, result) {
 

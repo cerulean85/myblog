@@ -31,10 +31,10 @@ var app = new Vue({
         articles: []
     },
     created() {
-        // this.getArticles()
         const requestOptions = {
             method: "POST",
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({"page_no": 1, "content_type": 0, "search_type": null, "search_keyword": null})
         };
 
         fetch("http://localhost:3000/get_articles", requestOptions)

@@ -2,12 +2,12 @@ const config = require("../config")
 const query = require("../modules/query")
 const util = require("../modules/util")
 
+
+
 module.exports = {
 
     hello: function(req, res) {
-
         const port = config.access.port
-
         res.send(`Welcome!!23 ${port}`)
     },
 
@@ -21,25 +21,54 @@ module.exports = {
     },
 
     get_articles: function(req, res) {
+        const contentType = req.body.content_type
+        const pageNo = req.body.page_no
+        const searchType = req.body.search_type
+        const searchKeyword = req.body.search_keyword
+        const offset = (pageNo - 1) * config.pageItemCount
+        const filter = query.query_filter(searchType, searchKeyword)
         query.query_select({
             "name": "insert_article",
-            "sql": `SELECT * FROM article WHERE deleted = 0`,
+            "sql": `
+                SELECT R.*
+                FROM ( 
+                  SELECT 
+                    @rownum := @rownum + 1 AS item_no,
+                    ART.no AS article_no,
+                    ART.user_no,
+                    ART.content_type,
+                    ART.title,
+                    ART.contents,
+                    ART.created_at,
+                    ART.updated_at,
+                    ART.files,
+                    ART.view_count,
+                    ART.exposed_at_top,
+                    U.nickname
+                  FROM (SELECT @rownum := 0) R, article AS ART 
+                  JOIN user AS U ON U.no = ART.user_no
+                  WHERE ART.content_type = ${contentType} AND ART.deleted = 0
+                  ${filter}
+                  ORDER BY ART.exposed_at_top ASC, ART.created_at DESC, ART.no DESC
+                ) AS R
+                LIMIT ${config.pageItemCount} OFFSET ${offset}`,
             "emit": function (result) {
                 let articles = []
                 for (const article of result) {
-
-                    const createdAtDTForm = util.stringToDatetime(article.created_at)
-                    const updatedAtDTForm = util.stringToDatetime(article.updated_at)
+                    const createdAtDTForm = util.datetimeFormatting(util.stringToDatetime(article.created_at))
+                    const updatedAtDTForm = util.datetimeFormatting(util.stringToDatetime(article.updated_at))
                     articles.push({
                         "no": article.no,
                         "user_no": article.user_no,
                         "content_type": article.content_type,
                         "title": article.title,
                         "contents": article.contents,
-                        "create_at": article.created_at,
-                        "update_at": article.updated_at,
+                        "create_at": createdAtDTForm,
+                        "update_at": updatedAtDTForm,
                         "files": article.files,
-                        "view_count": article.view_count
+                        "view_count": article.view_count,
+                        "exposed_at_top": article.exposed_at_top,
+                        "nickname": article.nickname
                     })
                 }
                 res.send({
@@ -47,11 +76,36 @@ module.exports = {
                     totalCount: articles.length,
                     list: articles
                 })
-                console.log(articles)
+                // console.log(articles)
             },
             "call_res": res,
             "reverse": false,
-            "res_send": true,
+            "res_send": false,
+        });
+    },
+
+    get_article_total_count: function(req, res) {
+        const contentType = req.body.content_type
+        const searchType = req.body.search_type
+        const searchKeyword = req.body.search_keyword
+        const filter = query.query_filter(searchType, searchKeyword)
+        query.query_select({
+            "name": "insert_article",
+            "sql": `
+                SELECT COUNT(*) AS total_count
+                FROM article AS ART
+                JOIN user AS U ON U.no = ART.user_no
+                WHERE ART.content_type = ${contentType} AND ART.deleted = 0
+                ${filter}`,
+            "emit": function (result) {
+                res.send({
+                    err: undefined,
+                    totalCount: result[0].total_count,
+                })
+            },
+            "call_res": res,
+            "reverse": false,
+            "res_send": false,
         });
     },
 
